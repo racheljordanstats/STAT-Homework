@@ -1,0 +1,230 @@
+---
+title: "Predictive Analytics HW 1"
+author: "Rachel Jordan"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1
+
+#### Explain whether each scenario is a classification or regression problem, and indicate whether we are most interested in inference or prediction. Finally, provide n and p.
+
+#### (a) We collect a set of data on the top 500 firms in the US. For each firm we record profit, number of employees, industry and the CEO salary. We are interested in understanding which factors affect CEO salary.
+
+This is a regression problem. We are most interested in inference. n is 500, p is 3.
+
+#### (b) We are considering launching a new product and wish to know whether it will be a success or a failure. We collect data on 20 similar products that were previously launched. For each product we have recorded whether it was a success or failure, price charged for the product, marketing budget, competition price, and ten other variables.
+
+This is a classification problem. We are most interested in prediction. n is 20, p is 13.
+
+#### (c) We are interested in predicting the % change in the USD/Euro exchange rate in relation to the weekly changes in the world stock markets. Hence we collect weekly data for all of 2012. For each week we record the % change in the USD/Euro, the % change in the US market, the % change in the British market, and the % change in the German market.
+
+This is a regression problem. We are most interested in prediction. n is 52, p is 3.
+
+## Question 2
+
+#### You will now think of some real-life applications for statistical learning.
+
+#### (a) Describe three real-life applications in which classification might be useful. Describe the response, as well as the predictors. Is the goal of each application inference or prediction? Explain your answer.
+
+1.  Sorting moles into benign and malignant. The response is benign or malignant, and the predictors are the qualities of the mole. The goal could be inference if one was using the results to identify problematic qualities of moles.
+2.  Figuring out which teens are likely to vape. The response is vaping or non, and the predictors would be different aspects of the teens' lives. The goal of this application could be inference if you were trying to figure out how different risk factors influence vaping behavior.
+3.  Trying to figure out whether someone will buy something from your online store if targeted by an advertisement email. The response would be purchase or no purchase, and the predictors would be whatever data you had collected about people who had previously interacted with your online store. The goal of each application is prediction because you are predicting whether or not someone would buy something if you emailed them an advertisement about it, and using that information to target your email advertisements.
+
+#### (b) Describe three real-life applications in which regression might be useful. Describe the response, as well as the predictors. Is the goal of each application inference or prediction? Explain your answer.
+
+1.  Examining the pollutants that contribute to ecosystem degradation in a particular ecosystem. The response could be some numerical measure of biodiversity, and the predictors would be the pollutants under consideration. The goal is inference if one is interested in looking at the effect of different pollutants on the health of an ecosystem.
+2.  Determining the amount of COVID-19 particles in a room. The response would be the concentration of COVID-19 particles, and the predictors would be the qualities of the room as well as the people in the room and their behaviors. The goal could be prediction if you were trying to use this information to determine whether to enter a particular room based on how "COVID-y" it was going to be.
+3.  Examining the effects of city policies on number of traffic accidents. The response would be the number of traffic accidents in a given time period, and the predictors would be the policies under consideration. The goal is inference if one is trying to determine how certain policies affect road safety.
+
+## Question 3
+
+#### What are the advantages and disadvantages of a very flexible (versus a less flexible) approach for regression or classification? Under what circumstances might a more flexible approach be preferred to a less flexible approach? When might a less flexible approach be preferred?
+
+The advantages of a very flexible approach is that it is helpful for getting closer to the true f if we are using a parametric approach where the chosen model is too far from the true f, because flexible models can fit a lot of possible functional forms. A less flexible approach might be preferred if you have a lot of error/noise in your data, which could cause overfitting in a more flexible approach.
+
+## Question 4
+
+Undergraduate only.
+
+## Question 5
+
+#### The training data ([http://bit.ly/340jDyc)](http://bit.ly/340jDyc)) set contains 175 observations classified as red or green. The test data set ([http://bit.ly/2L7uhdO)](http://bit.ly/2L7uhdO)) contains 1750 observations classified as either red or green.
+
+#### (a) Perform k-nearest neighbor classification using the training data with k = 1. Use this model to predict the class of each observation in the training data set. How many observations were incorrectly classified? Is this good?
+
+```{r}
+#read in data
+training <- read.csv("PA_HW1_train.csv",header=T)
+test <- read.csv("PA_HW1_test.csv",header=T)
+```
+
+```{r}
+#normalize data
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x))) 
+}
+training_n <- as.data.frame(lapply(training[1:2], normalize))
+test_n <- as.data.frame(lapply(test[1:2], normalize))
+```
+
+```{r}
+#label rows
+train_labels <- training[,3]
+test_labels <- test[,3]
+```
+
+```{r}
+require(class) #load package class
+knn_classifier_1 <- knn(train = training_n, test = training_n, cl=train_labels,k=1) #knn
+```
+
+```{r}
+table(train_labels,knn_classifier_1) #confusion matrix
+```
+
+0 observations were incorrectly classified. This is great, but only because you're testing on the training set, which is not great.
+
+#### (b) Again using k = 1, build a classification model with the training data set and use it to classify the observations in the test data set. How many observations were incorrectly classified? Is this good?
+
+```{r}
+knn_classifier_2 <- knn(train = training_n, test = test_n,cl = train_labels, k=1) #knn
+```
+
+```{r}
+table(test_labels,knn_classifier_2) #confusion matrix
+```
+
+379+ 389 = 768 = 43.9% of the test data were incorrectly classified. This is not that great, although it's slightly better than random guessing.
+
+#### (c) Train a model for for each value of k between 1 and 100. For each model, predict the class of the observations in the training data set and the observations in the test data set. Make a plot of the value of k on the x-axis and the error rate on the y-axis. (This is similar to Figure 2.4 in the book Elements of Statistical Learning) Comment on this graph.
+
+```{r}
+#predict class of observations in training data set 
+traintrain <- function(x)
+  {
+  knn(training_n,training_n,cl=train_labels,k=x)
+}
+
+vector <- c(1:100)
+
+#perform knn with each value of k between 1 and 100
+traintrain_results <- lapply(vector,traintrain)
+
+#calculate error rate for traintrain_results
+conf_matrix <- function(x)
+  {
+  table(train_labels,traintrain_results[[x]])
+}
+
+traintrain_confmatrices <- lapply(vector,conf_matrix)
+
+#create error rate function
+error_rate_traintrain <- function(x) 
+  {
+  (traintrain_confmatrices[[x]][2,1] + traintrain_confmatrices[[x]][1,2])/175
+}
+
+#calculate error rates for each k=1...100
+errorrate_traintrain_results <- lapply(vector,error_rate_traintrain)
+```
+
+```{r}
+#predict class of observations in test data set
+testtest <- function(x)
+  {
+  knn(training_n,test_n,cl=train_labels,k=x)
+}
+
+#perform knn with each value of k between 1 and 100
+testtest_results <- lapply(vector,testtest)
+
+#calculate error rate for testtest_results
+conf_matrix_testtest <- function(x)
+  {
+  table(test_labels,testtest_results[[x]])
+}
+
+testtest_confmatrices <- lapply(vector,conf_matrix_testtest)
+
+#create error rate function
+error_rate_testtest <- function(x) 
+  {
+  (testtest_confmatrices[[x]][2,1] + testtest_confmatrices[[x]][1,2])/1750
+}
+
+#calculate error rates for each k=1...100
+errorrate_testtest_results <- lapply(vector,error_rate_testtest)
+```
+
+```{r}
+#plot predicting training and predicting test k=1...100
+
+df1 <- t(as.data.frame(errorrate_testtest_results))
+df2 <- t(as.data.frame(errorrate_traintrain_results))
+df <- as.data.frame(cbind(df1,df2))
+
+require(ggplot2)
+ggplot(df, aes(vector)) + 
+  geom_line(aes(y = df1, color = "Predicting Test Data")) + 
+  geom_line(aes(y = df2, color = "Predicting Train Data")) + xlab("k") + ylab("Error Rate") + ggtitle("Error Rate by k")
+```
+
+Looks like when you predict the response for the training data, smaller values of k lead to a lesser error rate, but the error rate increases with k to a point, then levels off, then increases again as k gets closer to 100. When predicting the response for the test data, it looks like for both lower k and higher k, the error rate is higher, but the error rate seems be lowest for a medium k. This has to do with the fit of the model. As k increases, the model gets less flexible, and the error rates converge. With a more flexible model/lower k, testing on the training set gives you no error, whereas testing on the test set gives you a higher error. You can see the optimal k somewhere in the neighborhood of 50, where the error rate is minimized, optimizing the balance between bias and variance.
+
+## Question 6
+
+#### Plot all irises based on their Sepal.Length and Sepal.Width values using different colors for each species.
+
+```{r}
+#load iris data set
+require(datasets)
+data(iris)
+```
+
+```{r}
+#create plot
+ggplot(iris, aes(Sepal.Length,Sepal.Width)) + geom_point(aes(colour=Species))
+```
+
+## Question 7
+
+#### Perform linear discriminant analysis using the iris data with only Sepal.Length and Sepal.Width as predictors. Make predictions about the species of each iris and create a confusion matrix for this predictions.
+
+```{r}
+#load MASS package
+require(MASS)
+
+#scale data
+iris_scaled <- as.data.frame(scale(iris[,-5]))
+
+#add Species back in
+data("iris")
+iris2 <- cbind(iris_scaled,iris[,5])
+colnames(iris2) <- c("Sepal.Length","Sepal.Width","Petal.Length","Petal.Width","Species")
+
+#only sepal length and sepal width
+iris3 <- cbind(iris2[,1:2])
+
+#perform LDA
+model <- lda(Species~Sepal.Length+Sepal.Width,data=iris2)
+iris_predictions <- predict(model,iris3)
+```
+
+```{r}
+#create confusion matrix
+table(iris2$Species,iris_predictions$class)
+```
+
+## Question 8
+
+#### On the plot produced in part 1, plot the predicted value of species over a grid of points using the same color scheme used in part 1.
+
+```{r}
+#create plot: points = true data, text = predictions
+ggplot(iris2, aes(Sepal.Length,Sepal.Width)) + geom_point(aes(colour=Species)) + geom_text(aes(label=iris_predictions$class,colour=iris_predictions$class),check_overlap = T)
+```
