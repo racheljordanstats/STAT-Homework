@@ -1,0 +1,79 @@
+---
+title: "Jordan_Hw5"
+author: "Rachel Jordan"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 6.8
+
+```{r}
+#input data
+A_68 <- c(-1, 1, -1,1)
+B_68 <- c(-1, -1, 1, 1)
+I_68 <- c(21,37,25,31)
+II_68 <- c(23,38,24,29)
+III_68 <- c(20,35,29,30)
+IV_68 <- c(22,39,26,34)
+V_68 <- c(28,38,25,33)
+VI_68 <- c(26,36,27,35)
+
+#combine into table
+data_68 <- data.frame(A_68, B_68, I_68, II_68, III_68, IV_68, V_68, VI_68)
+data_68
+
+#build ANOVA table
+
+y_68 <- c(I_68, II_68, III_68, IV_68, V_68, VI_68)
+ 
+factorA_68 <- as.factor(rep(A_68,6))
+factorB_68 <- as.factor(rep(B_68,6))
+g_68 <- lm(y_68 ~ factorA_68 + factorB_68 + factorA_68*factorB_68)
+anova(g_68)
+
+#looks like A does impact the response and B does not. the interaction effect is also significant
+
+#compute sums for each combination
+sums_68 <- apply(data_68[,3:8], 1, sum)
+names(sums_68) <- c("(1)", "(a)", "(b)", "(ab)")
+ybar_68 <- sums_68/6
+
+#interaction plots
+par(mfrow=c(1,2))
+interaction.plot(A_68, B_68, ybar_68) #lines crossing
+interaction.plot(B_68, A_68, ybar_68) #lines not crossing but not parallel
+#interaction effect is indeed occurring
+#time definitely matters, but you can also say that bacterial growth depends on the interaction of time with the culture
+
+#effect estimate
+A_hat_68<-(sums_68[4]+sums_68[2]-sums_68[3]-sums_68[1])/12
+#the main effect of A is 9.92. This is the change in response produced by the change in the level of 'time' averaged over the levels of 'culture'
+B_hat_68 <- (sums_68[4]+sums_68[3]-sums_68[2]-sums_68[1])/12
+#the main effect of B is weak: -1.25. This is the change in response produced by the change in the level of 'culture' averaged over the levels of 'time'.
+AB_hat_68 <- (sums_68[4]+sums_68[1]-sums_68[2]-sums_68[3])/12
+#the interaction effect of AB is -3.92. This is the average difference between the effect of culture at the high level of time and the effect of culture at the low level of time. 
+```
+
+Based on the ANOVA, we can conclude that the main effect of time is statistically significant, but the effect of culture is not. There IS interaction between time and culture. This is backed up by the factor effects that we calculated, where abs(B_hat) was relatively low compared to the absolute values of the other effects. Now I will analyze the residuals.
+
+```{r}
+# residual analysis
+par(mfrow=c(1,2))
+# normal plot
+qqnorm(g_68$residuals)
+qqline(g_68$residuals) #this looks pretty normal
+gaov_68<-aov(y_68~factorA_68+factorB_68)
+shapiro.test(g_68$residuals) #it is normal, hurrah
+bartlett.test(gaov_68$residuals~factorA_68) #equal variance!
+bartlett.test(gaov_68$residuals~factorB_68) #equal variance!
+
+#residual plot
+plot(g_68$fitted.values,g_68$residuals) #looks homoscedastic - good
+abline(h=0)
+```
+
+The assumptions are met, so our conclusions are valid. Awesome!
