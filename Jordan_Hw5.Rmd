@@ -87,14 +87,11 @@ The assumptions are met, so our conclusions are valid. Awesome!
 A_615 <- as.factor(rep(c(-1,1), times=16))
 B_615 <- as.factor(rep(c(-1,1), each = 2, times=8))
 C_615 <- as.factor(rep(c(-1,1), each = 4, times=4))
-D_615 <- as.factor(rep(c(-1,1), each = 16))
+D_615 <- as.factor(rep(c(-1,1), each = 8, times=2))
 rep_615 <- as.factor(rep(1:2, each=16))
 y_615 <- c(7.037,14.707,11.635,17.273,10.403,4.368,9.360,13.440,8.561,16.867,13.876,19.824,11.846,6.125,11.190,15.653, 6.376, 15.219,12.089,17.815,10.151,4.098,9.253,12.923,8.951,17.052,13.658,19.639,12.337,5.904,10.935,15.053)
 
 data_615 <- data.frame(A_615, B_615, C_615, D_615, rep_615, y_615)
-
-require(stats)
-data_615 <- aggregate(y_615 ~ A_615 + B_615 + C_615 + D_615, FUN= mean,data=data_615)
 
 #create linear model
 g_615 <- lm(y_615~(A_615+B_615+C_615+D_615)^4,data=data_615)
@@ -104,15 +101,68 @@ g_615 <- lm(y_615~(A_615+B_615+C_615+D_615)^4,data=data_615)
 g_615$effects
 effects_615 <- abs(g_615$effects[-1])
 
-#plot effects
-qq_615 <- qqnorm(effects_615, type="n")  # "n" means no plotting
-text(qq_615$x, qq_615$y, labels = names(effects_615)) 
-
-print(effects_615) #these are the estimated effects. looks like D is unimportant
+print(effects_615) #these are the estimated effects. looks like interactions with D are unimportant
 ```
 
-#### (b) 
+#### (b)
 
 ```{r}
 anova(g_615)
 ```
+
+Everything except the interaction terms that contain D (grain refiner) affect cracking (they are significant at alpha = 0.05).
+
+#### (c)
+
+The regression model is y-hat = 11.99 + (8.54/2)x1 + (11.25/2)x2 + (10.17/2)x3 + (5.54/2)x4 + (5.47/2)x1x2 + (11.34/2)x1x3 + (8.87/2)x1x2x3
+
+```{r}
+mean(y_615)
+
+#reduced model
+g_reduced_615 <- lm(y_615~A_615+B_615+C_615+D_615 + A_615*B_615 + A_615*C_615 + A_615*B_615*C_615)
+anova(g_reduced_615)
+abs(g_reduced_615$effects)
+```
+
+#### (d) 
+
+```{r}
+#residual analysis
+
+
+par(mfrow=c(1,2))
+# normal plot
+qqnorm(g_reduced_615$residuals)
+qqline(g_reduced_615$residuals) #normal
+gaov_615<-aov(y_615~A_615+B_615+C_615+D_615 + A_615*B_615 + A_615*C_615 + A_615*B_615*C_615)
+shapiro.test(g_reduced_615$residuals) #normal!
+bartlett.test(gaov_615$residuals~A_615) #homoscedastic for A
+bartlett.test(gaov_615$residuals~B_615) #omoscedastisitic for B
+bartlett.test(gaov_615$residuals~C_615) #homoscedastic
+bartlett.test(gaov_615$residuals~D_615) #homoscedastic
+
+# residual plot
+plot(g_615$fitted.values,g_615$residuals) #this looks fine
+abline(h=0)
+```
+
+#### (e) 
+
+```{r}
+bartlett.test(gaov_615$residuals~A_615) 
+bartlett.test(gaov_615$residuals~B_615)
+bartlett.test(gaov_615$residuals~C_615) 
+bartlett.test(gaov_615$residuals~D_615) 
+```
+
+There is no indication that the variables affect the variability because the variance is not significantly different with any of the significant factors.
+
+#### (f) 
+
+```{r}
+par(mfrow=c(2,2))
+plot.design(data_615) 
+```
+
+To result in smaller cracks, we want A, B, and D to be low and C to be high.
