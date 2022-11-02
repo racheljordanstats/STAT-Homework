@@ -77,3 +77,42 @@ abline(h=0)
 ```
 
 The assumptions are met, so our conclusions are valid. Awesome!
+
+## Question 6.15
+
+#### (a)
+
+```{r}
+#input data
+A_615 <- as.factor(rep(c(-1,1), times=16))
+B_615 <- as.factor(rep(c(-1,1), each = 2, times=8))
+C_615 <- as.factor(rep(c(-1,1), each = 4, times=4))
+D_615 <- as.factor(rep(c(-1,1), each = 16))
+rep_615 <- as.factor(rep(1:2, each=16))
+y_615 <- c(7.037,14.707,11.635,17.273,10.403,4.368,9.360,13.440,8.561,16.867,13.876,19.824,11.846,6.125,11.190,15.653, 6.376, 15.219,12.089,17.815,10.151,4.098,9.253,12.923,8.951,17.052,13.658,19.639,12.337,5.904,10.935,15.053)
+
+data_615 <- data.frame(A_615, B_615, C_615, D_615, rep_615, y_615)
+
+require(stats)
+data_615 <- aggregate(y_615 ~ A_615 + B_615 + C_615 + D_615, FUN= mean,data=data_615)
+
+#create linear model
+g_615 <- lm(y_615~(A_615+B_615+C_615+D_615)^4,data=data_615)
+
+
+#visualize effects
+g_615$effects
+effects_615 <- abs(g_615$effects[-1])
+
+#plot effects
+qq_615 <- qqnorm(effects_615, type="n")  # "n" means no plotting
+text(qq_615$x, qq_615$y, labels = names(effects_615)) 
+
+print(effects_615) #these are the estimated effects. looks like D is unimportant
+```
+
+#### (b) 
+
+```{r}
+anova(g_615)
+```
