@@ -56,6 +56,8 @@ B_hat_68 <- (sums_68[4]+sums_68[3]-sums_68[2]-sums_68[1])/12
 #the main effect of B is weak: -1.25. This is the change in response produced by the change in the level of 'culture' averaged over the levels of 'time'.
 AB_hat_68 <- (sums_68[4]+sums_68[1]-sums_68[2]-sums_68[3])/12
 #the interaction effect of AB is -3.92. This is the average difference between the effect of culture at the high level of time and the effect of culture at the low level of time. 
+
+
 ```
 
 Based on the ANOVA, we can conclude that the main effect of time is statistically significant, but the effect of culture is not. There IS interaction between time and culture. This is backed up by the factor effects that we calculated, where abs(B_hat) was relatively low compared to the absolute values of the other effects. Now I will analyze the residuals.
@@ -102,6 +104,8 @@ g_615$effects
 effects_615 <- abs(g_615$effects[-1])
 
 print(effects_615) #these are the estimated effects. looks like interactions with D are unimportant
+
+2*g_615$coefficients
 ```
 
 #### (b)
@@ -138,7 +142,7 @@ qqline(g_reduced_615$residuals) #normal
 gaov_615<-aov(y_615~A_615+B_615+C_615+D_615 + A_615*B_615 + A_615*C_615 + A_615*B_615*C_615)
 shapiro.test(g_reduced_615$residuals) #normal!
 bartlett.test(gaov_615$residuals~A_615) #homoscedastic for A
-bartlett.test(gaov_615$residuals~B_615) #omoscedastisitic for B
+bartlett.test(gaov_615$residuals~B_615) #homoscedastisitic for B
 bartlett.test(gaov_615$residuals~C_615) #homoscedastic
 bartlett.test(gaov_615$residuals~D_615) #homoscedastic
 
@@ -211,7 +215,7 @@ anova(g_reduced_626)
 ```{r}
 mean(y_626)
 
-abs(g_reduced_626$effects[-1])
+g_reduced_626$effects[-1]
 ```
 
 The model is y_hat = 30.53 + (33.4/2)x1 + (95.99/2)x2 + (27.4/2)x3 + (22.45/2)x1x2.
@@ -274,17 +278,40 @@ We want A, B, and C to be high to produce a maximum yield. D and E are insignifi
 
 ```{r}
 #input data
-A_73 <- as.factor(rep(c(-1,1), times=8))
-B_73 <- as.factor(rep(c(-1,1), each = 2, times=4))
-C_73 <- as.factor(rep(c(-1,1), each = 4, times=2))
-D_73 <- as.factor(rep(c(-1,1), each = 8))
-Block1_73 <- c(7.037,14.707,11.635,17.273,10.403,4.368,9.360,13.440,8.561,16.867,13.876,19.824,11.846,6.125,11.190,15.653)
-Block2_73 <- c(6.376, 15.219,12.089,17.815,10.151,4.098,9.253,12.923,8.951,17.052,13.658,19.639,12.337,5.904,10.935,15.053)
+A_73 <- as.factor(rep(c(-1,1), times=16))
+B_73 <- as.factor(rep(c(-1,1), each = 2, times=8))
+C_73 <- as.factor(rep(c(-1,1), each = 4, times=4))
+D_73 <- as.factor(rep(c(-1,1), each = 8, times=2))
+Blocks_73 <- as.factor(rep(c(1,2), each=16))
+y_73 <- c(7.037,14.707,11.635,17.273,10.403,4.368,9.360,13.440,8.561,16.867,13.876,19.824,11.846,6.125,11.190,15.653, 6.376,15.219,12.089,17.815,10.151,4.098,9.253,12.923,8.951,17.052,13.658,19.639,12.337,5.904,10.935,15.053)
 
-data_73 <- data.frame(A_73, B_73, C_73, D_73, Block1_73, Block2_73)
+data_73 <- data.frame(A_73,B_73,C_73,D_73,Blocks_73,y_73)
 
-y_73 <- c(Block1_73,Block2_73)
+g_73 <- lm(y_73 ~ (A_73+B_73+C_73+D_73)^4+Blocks_73)
+anova(g_73)
+#A, B, C, D, AB, AC, ABC significant
 
+#visualize effects
+g_73$effects
+effects_73 <- abs(g_73$effects[-1])
+
+qq_73 <- qqnorm(effects_73, type="n")  # "n" means no plotting
+text(qq_73$x, qq_73$y, labels = names(effects_73))
+
+#reduce the model
+g_reduced_73 <- anova(lm(y_73 ~ A_73 + B_73 + C_73 + D_73+ A_73*B_73 + A_73*C_73 + A_73*B_73*C_73 + Blocks_73))
+
+#residual analysis
+par(mfrow=c(1,2))
+# normal plot
+#qqnorm(g_reduced_73$residuals) #this is giving me an error now and i don't know why
+#qqline(g_reduced_73$residuals) #error
+gaov_73<-aov(y_73 ~ A_73 + B_73 + C_73 + D_73 + A_73*B_73 + A_73*B_73*C_73 + Blocks_73)
+#shapiro.test(g_reduced_73$residuals) also giving an error 
+bartlett.test(gaov_73$residuals~A_73) #homoscedastic for A
+bartlett.test(gaov_73$residuals~B_73) #homoscedastic for B
+bartlett.test(gaov_73$residuals~C_73) #homoscedastic for C
+bartlett.test(gaov_73$residuals~Blocks_73) #homoscedastic
 ```
 
 ## Question 7.7
@@ -300,10 +327,10 @@ E_77 <- rep(c(-1,1), each = 16)
 y_77 <- c(7,9,34,55,16,20,40,60,8,10,32,50,18,21,44,61,8,12,35,52,15,22,45,65,6,10,30,53,15,20,41,63)
 
 ABCDE_77 <- A_77*B_77*C_77*D_77*E_77 #want to confound ABCDE
-data_77 <- data.frame(factor(A_77), factor(B_77), factor(C_77), factor(D_77), (E_77), ABCDE_77, y_626)
+data_77 <- data.frame(factor(A_77), factor(B_77), factor(C_77), factor(D_77), factor(E_77), ABCDE_77, y_626)
 #ABCDE = blocks
 
-g_77 <- lm(y_77 ~ (A_77+B_77+C_77+D_77)^4)
+g_77 <- lm(y_77 ~ (factor(A_77)+factor(B_77)+factor(C_77)+factor(D_77)+factor(E_77))^4) 
 anova(g_77) #looks like A, B, C, and AB are significant
 
 Blocks_77 <- ABCDE_77
@@ -328,6 +355,49 @@ bartlett.test(gaov_77$residuals~Blocks_77) #homoscedastic
 
 ```{r}
 #4 blocks with ACDE and BCD (and consequently ABE) confounded
+A_79 <- rep(c(-1,1), times=16)
+B_79 <- rep(c(-1,1), each = 2, times=8)
+C_79 <- rep(c(-1,1), each = 4, times=4)
+D_79 <- rep(c(-1,1), each = 8, times=2)
+E_79 <- rep(c(-1,1), each = 16)
+y_79 <- c(7,9,34,55,16,20,40,60,8,10,32,50,18,21,44,61,8,12,35,52,15,22,45,65,6,10,30,53,15,20,41,63)
 
+ACDE_79 <-  A_79*C_79*D_79*E_79
+BCD_79 <-  B_79*C_79*D_79
+ABE_79 <-  A_79*B_79*E_79 #this would naturally be also confounded
 
+blocks_79 <- vector(length=32)
+for(i in 1:32) {
+  if(ACDE_79[i]==-1 & BCD_79[i]==-1) blocks_79[i]=1
+  if(ACDE_79[i]==1 & BCD_79[i]==-1) blocks_79[i]=2
+  if(ACDE_79[i]==-1 & BCD_79[i]==1) blocks_79[i]=3
+  if(ACDE_79[i]==1 & BCD_79[i]==1) blocks_79[i]=4
+}
+blocks <- as.factor(blocks_79)
+data_79 <- data.frame(A_79, B_79, C_79, D_79, E_79, blocks, ACDE_79, BCD_79,ABE_79, y_79)
+
+g_79 <- lm(y_79 ~ blocks + (A_79 + B_79 + C_79 + D_79 + E_79)^5)
+anova(g_79) #look like we ran out of df's so I'm going to look at the half-normal probability plot
+
+effects_79 <- abs(g_79$effects[-1])
+
+qq_79 <- qqnorm(effects_79, type="n")  # "n" means no plotting
+text(qq_79$x, qq_79$y, labels = names(effects_79))
+#B, A, C, AB look significant
+
+#reduced model
+h_79 <- lm(y_79 ~ blocks + A_79 + B_79 + C_79 + A_79*B_79)
+anova(h_79) #all significant
+
+#residual analysis
+par(mfrow=c(1,2))
+# normal plot
+qqnorm(h_79$residuals) #this looks pretty good
+qqline(h_79$residuals) #normal
+gaov_79<-aov(h_79)
+shapiro.test(h_79$residuals) #normal
+bartlett.test(gaov_79$residuals~A_79) #homoscedastic for A
+bartlett.test(gaov_79$residuals~B_79) #homoscedastic for B but barely
+bartlett.test(gaov_79$residuals~C_79) #homoscedastic for C
+bartlett.test(gaov_79$residuals~blocks) #homoscedastic
 ```
