@@ -166,3 +166,168 @@ plot.design(data_615)
 ```
 
 To result in smaller cracks, we want A, B, and D to be low and C to be high.
+
+## Question 6.26
+
+```{r}
+#enter data
+A_626 <- as.factor(rep(c(-1,1), times=16))
+B_626 <- as.factor(rep(c(-1,1), each = 2, times=8))
+C_626 <- as.factor(rep(c(-1,1), each = 4, times=4))
+D_626 <- as.factor(rep(c(-1,1), each = 8, times=2))
+E_626 <- as.factor(rep(c(-1,1), each = 16))
+y_626 <- c(7,9,34,55,16,20,40,60,8,10,32,50,18,21,44,61,8,12,35,52,15,22,45,65,6,10,30,53,15,20,41,63)
+
+data_626 <- data.frame(A_626, B_626, C_626, D_626, E_626, y_626)
+```
+
+#### (a) 
+
+```{r}
+#create linear model
+g_626 <- lm(y_626~(A_626+B_626+C_626+D_626+E_626)^5,data=data_626)
+
+#visualize effects
+g_626$effects
+effects_626 <- abs(g_626$effects[-1])
+
+qq_626 <- qqnorm(effects_626, type="n")  # "n" means no plotting
+text(qq_626$x, qq_626$y, labels = names(effects_626))
+```
+
+The effect of B appears to be large, and A, C, and A\*B also seem important.
+
+#### (b) 
+
+```{r}
+anova(g_626) #not enough df's to run this fully so I'm just going to toss out some terms based on the half-normal probability plot.
+
+g_reduced_626 <- lm(y_626 ~ A_626 + B_626 + C_626 + A_626*B_626) #these are all significant! yippee
+anova(g_reduced_626)
+```
+
+#### (c) 
+
+```{r}
+mean(y_626)
+
+abs(g_reduced_626$effects[-1])
+```
+
+The model is y_hat = 30.53 + (33.4/2)x1 + (95.99/2)x2 + (27.4/2)x3 + (22.45/2)x1x2.
+
+#### (d) 
+
+```{r}
+#residual analysis
+
+par(mfrow=c(1,2))
+# normal plot
+qqnorm(g_reduced_626$residuals)
+qqline(g_reduced_626$residuals) #normal
+gaov_626<-aov(y_626 ~ A_626 + B_626 + C_626 + A_626*B_626)
+shapiro.test(g_reduced_626$residuals) #normal!
+bartlett.test(gaov_626$residuals~A_626) #homoscedastic for A
+bartlett.test(gaov_626$residuals~B_626) #uh-oh! heterscedastic for B!
+bartlett.test(gaov_626$residuals~C_626) #homoscedastic for C
+
+```
+
+#### (e) 
+
+```{r}
+# residual plot
+plot(g_626$fitted.values,g_626$residuals) #this looks fine
+abline(h=0)
+
+plot(g_626$fitted.values,g_626$A_626) 
+plot(g_626$fitted.values,g_626$B_626) 
+plot(g_626$fitted.values,g_626$C_626) 
+plot(g_626$fitted.values,g_626$D_626) 
+plot(g_626$fitted.values,g_626$E_626) 
+```
+
+The points are all on the line in the residuals vs fitted plot. They look kind of randomly distributed in the plots of the factors against the residuals. Seems good.
+
+#### (f) 
+
+```{r}
+#interaction plots
+par(mfrow=c(1,2))
+interaction.plot(A_626, B_626, y_626) #lines not crossing but not parallel
+interaction.plot(B_626, A_626, y_626) #lines not crossing but not parallel
+#interaction effect is occurring between A and B. The interaction of aperture and exposure time affects the yield.
+```
+
+A\*B is significant and this interaction affects the yield.
+
+#### (g)
+
+```{r}
+par(mfrow=c(2,2))
+plot.design(data_626) 
+```
+
+We want A, B, and C to be high to produce a maximum yield. D and E are insignificant.
+
+## Question 7.3 
+
+```{r}
+#input data
+A_73 <- as.factor(rep(c(-1,1), times=8))
+B_73 <- as.factor(rep(c(-1,1), each = 2, times=4))
+C_73 <- as.factor(rep(c(-1,1), each = 4, times=2))
+D_73 <- as.factor(rep(c(-1,1), each = 8))
+Block1_73 <- c(7.037,14.707,11.635,17.273,10.403,4.368,9.360,13.440,8.561,16.867,13.876,19.824,11.846,6.125,11.190,15.653)
+Block2_73 <- c(6.376, 15.219,12.089,17.815,10.151,4.098,9.253,12.923,8.951,17.052,13.658,19.639,12.337,5.904,10.935,15.053)
+
+data_73 <- data.frame(A_73, B_73, C_73, D_73, Block1_73, Block2_73)
+
+y_73 <- c(Block1_73,Block2_73)
+
+```
+
+## Question 7.7
+
+```{r}
+#ABCDE confounded with 2 blocks
+#enter data
+A_77 <- rep(c(-1,1), times=16)
+B_77 <- rep(c(-1,1), each = 2, times=8)
+C_77 <- rep(c(-1,1), each = 4, times=4)
+D_77 <- rep(c(-1,1), each = 8, times=2)
+E_77 <- rep(c(-1,1), each = 16)
+y_77 <- c(7,9,34,55,16,20,40,60,8,10,32,50,18,21,44,61,8,12,35,52,15,22,45,65,6,10,30,53,15,20,41,63)
+
+ABCDE_77 <- A_77*B_77*C_77*D_77*E_77 #want to confound ABCDE
+data_77 <- data.frame(factor(A_77), factor(B_77), factor(C_77), factor(D_77), (E_77), ABCDE_77, y_626)
+#ABCDE = blocks
+
+g_77 <- lm(y_77 ~ (A_77+B_77+C_77+D_77)^4)
+anova(g_77) #looks like A, B, C, and AB are significant
+
+Blocks_77 <- ABCDE_77
+h_77 <- lm(y_626 ~ A_626 + B_626 + C_626 + A_626*B_626 + Blocks_77)
+anova(h_77) #A, B, C, and AB are significant
+
+#residual analysis
+
+par(mfrow=c(1,2))
+# normal plot
+qqnorm(h_77$residuals)
+qqline(h_77$residuals) #normal
+gaov_77<-aov(y_77 ~ A_77 + B_77 + C_77 + A_77*B_77)
+shapiro.test(h_77$residuals) #normal!
+bartlett.test(gaov_77$residuals~A_77) #homoscedastic for A
+bartlett.test(gaov_77$residuals~B_77) #uh-oh! heterscedastic for B!
+bartlett.test(gaov_77$residuals~C_77) #homoscedastic for C
+bartlett.test(gaov_77$residuals~Blocks_77) #homoscedastic
+```
+
+## Question 7.9 
+
+```{r}
+#4 blocks with ACDE and BCD (and consequently ABE) confounded
+
+
+```
