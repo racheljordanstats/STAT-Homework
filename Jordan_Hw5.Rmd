@@ -129,7 +129,7 @@ anova(g_reduced_615)
 abs(g_reduced_615$effects)
 ```
 
-#### (d) 
+#### (d)
 
 ```{r}
 #residual analysis
@@ -151,7 +151,7 @@ plot(g_615$fitted.values,g_615$residuals) #this looks fine
 abline(h=0)
 ```
 
-#### (e) 
+#### (e)
 
 ```{r}
 bartlett.test(gaov_615$residuals~A_615) 
@@ -162,7 +162,7 @@ bartlett.test(gaov_615$residuals~D_615)
 
 There is no indication that the variables affect the variability because the variance is not significantly different with any of the significant factors.
 
-#### (f) 
+#### (f)
 
 ```{r}
 par(mfrow=c(2,2))
@@ -185,7 +185,7 @@ y_626 <- c(7,9,34,55,16,20,40,60,8,10,32,50,18,21,44,61,8,12,35,52,15,22,45,65,6
 data_626 <- data.frame(A_626, B_626, C_626, D_626, E_626, y_626)
 ```
 
-#### (a) 
+#### (a)
 
 ```{r}
 #create linear model
@@ -201,7 +201,7 @@ text(qq_626$x, qq_626$y, labels = names(effects_626))
 
 The effect of B appears to be large, and A, C, and A\*B also seem important.
 
-#### (b) 
+#### (b)
 
 ```{r}
 anova(g_626) #not enough df's to run this fully so I'm just going to toss out some terms based on the half-normal probability plot.
@@ -210,7 +210,7 @@ g_reduced_626 <- lm(y_626 ~ A_626 + B_626 + C_626 + A_626*B_626) #these are all 
 anova(g_reduced_626)
 ```
 
-#### (c) 
+#### (c)
 
 ```{r}
 mean(y_626)
@@ -220,7 +220,7 @@ g_reduced_626$effects[-1]
 
 The model is y_hat = 30.53 + (33.4/2)x1 + (95.99/2)x2 + (27.4/2)x3 + (22.45/2)x1x2.
 
-#### (d) 
+#### (d)
 
 ```{r}
 #residual analysis
@@ -237,7 +237,7 @@ bartlett.test(gaov_626$residuals~C_626) #homoscedastic for C
 
 ```
 
-#### (e) 
+#### (e)
 
 ```{r}
 # residual plot
@@ -253,7 +253,7 @@ plot(g_626$fitted.values,g_626$E_626)
 
 The points are all on the line in the residuals vs fitted plot. They look kind of randomly distributed in the plots of the factors against the residuals. Seems good.
 
-#### (f) 
+#### (f)
 
 ```{r}
 #interaction plots
@@ -274,7 +274,7 @@ plot.design(data_626)
 
 We want A, B, and C to be high to produce a maximum yield. D and E are insignificant.
 
-## Question 7.3 
+## Question 7.3
 
 ```{r}
 #input data
@@ -351,7 +351,7 @@ bartlett.test(gaov_77$residuals~C_77) #homoscedastic for C
 bartlett.test(gaov_77$residuals~Blocks_77) #homoscedastic
 ```
 
-## Question 7.9 
+## Question 7.9
 
 ```{r}
 #4 blocks with ACDE and BCD (and consequently ABE) confounded
