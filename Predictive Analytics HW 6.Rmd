@@ -1,0 +1,59 @@
+---
+title: "Predictive Analytics HW 6"
+author: "Rachel Jordan"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1
+
+#### Describe the difference between bagging and boosting with trees.
+
+Bagging is a random forest where m = p. Bagging uses bootstrap sampling to create copies of the training data set; each copy has a tree fit to it and then all the trees are combined. The trees are independent in bagging. In boosting, the trees are grown one at a time and each successive one uses info from the previous tree. When you boost, you fit a decision tree to the residuals from the current model and keep improving on the model by doing that over and over again with the residuals from previous models. This slower learning process can perform well, generally speaking.
+
+## Question 2
+
+#### This question uses the Caravan data set (from the R package ISLR2).
+
+```{r}
+#load data set
+require(ISLR2)
+caravan <- Caravan
+```
+
+#### (a) Create a training set consisting of the first 1,000 observations, and a test set consisting of the remaining observations.
+
+```{r}
+#recode response to 1 and 0
+require(tidyverse)
+caravan <- caravan %>% 
+  mutate(Purchase2 = case_when(
+    Purchase == "Yes" ~ 1,
+    Purchase == "No" ~ 0,
+  )) %>% 
+  select(-Purchase)
+
+#create test and training sets
+train_caravan <- caravan[1:1000,]
+test_caravan <- caravan[1001:5822,]
+```
+
+(b) Fit a boosting model to the training set with Purchase as the response and the other variables as predictors. Use 1,000 trees, and a shrinkage value of 0.01. Which predictors appear to be the most important?
+
+```{r}
+#load gbm package
+require(gbm)
+
+#set seed and fit boosting model on training set
+set.seed (123)
+boost_caravan <- gbm(Purchase2 ~ ., data = train_caravan, distribution = "bernoulli", n.trees = 1000, shrinkage=0.01)
+
+#call summary
+summary(boost_caravan)
+```
+
+PPERSAUT, MKOOPKLA, and MOPLHOOG seem to be the most influential variables.
