@@ -42,7 +42,7 @@ train_caravan <- caravan[1:1000,]
 test_caravan <- caravan[1001:5822,]
 ```
 
-(b) Fit a boosting model to the training set with Purchase as the response and the other variables as predictors. Use 1,000 trees, and a shrinkage value of 0.01. Which predictors appear to be the most important?
+#### (b) Fit a boosting model to the training set with Purchase as the response and the other variables as predictors. Use 1,000 trees, and a shrinkage value of 0.01. Which predictors appear to be the most important?
 
 ```{r}
 #load gbm package
@@ -57,3 +57,26 @@ summary(boost_caravan)
 ```
 
 PPERSAUT, MKOOPKLA, and MOPLHOOG seem to be the most influential variables.
+
+#### (c) Use the boosting model to predict the response on the test data. Predict that a person will make a purchase if the estimated probability of purchase is greater than 20%. Form a confusion matrix. What fraction of the people predicted to make a purchase do in fact make one? How does this compare with the results obtained from applying KNN or logistic regression to this data set?
+
+```{r}
+#1 if p > 0.20, 0 if p >= 0.20
+predictions <- ifelse(predict(boost_caravan, newdata = test_caravan, n.trees = 1000, type="response") > 0.20, 1, 0)
+
+#confusion matrix
+table(test_caravan$Purchase2, predictions)
+```
+
+The fraction of people predicted to make a purchase who end up actually making a purchase is 33/113= 29.2%.
+
+```{r}
+#applying knn
+require(class)
+knn_preds <- knn(train_caravan[,-86],test_caravan[,-86], cl=train_caravan[,86], k=5)
+
+#confusion matrix
+table(test_caravan$Purchase2, knn_preds)
+```
+
+Applying KNN where k=5 results in a fraction of 4/30 = 13.3%, much worse than the 29.2% result obtained by boosting.
