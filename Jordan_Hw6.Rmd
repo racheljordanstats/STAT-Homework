@@ -1,0 +1,66 @@
+---
+title: "Jordan_Hw6"
+author: "Rachel Jordan"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 8.2
+
+```{r}
+#input data
+A_82 <- rep(c(-1,1), times=8)
+B_82 <- rep(c(-1,1), each = 2, times=4)
+C_82 <- rep(c(-1,1), each = 4, times=2)
+D_82 <- A_82*B_82*C_82 #fractional factorial, I=ABCD
+
+A_82 <- as.factor(A_82)
+B_82 <- as.factor(B_82)
+C_82 <- as.factor(C_82)
+D_82 <- as.factor(D_82)
+
+y_82 <- c(7.037,14.707,11.635,17.273,10.403,4.368,9.360,13.440,8.561,16.867,13.876,19.824,11.846,6.125,11.190,15.653)
+
+data_82 <- data.frame(A_82,B_82,C_82,D_82,y_82)
+
+#fit the full model
+g_82 <- lm(y_82 ~ (A_82+B_82+C_82+D_82)^4)
+anova(g_82) #only aliases
+
+#half-normal qq plot
+effects_82 <- abs(g_82$effects[-1])
+qq_82 <- qqnorm(effects_82,type="n")
+text(qq_82$x, qq_82$y, labels=names(effects_82))
+
+#fit reduced model
+h_82 <- lm(y_82 ~ A_82 + B_82 + C_82 + D_82 + A_82*B_82 + A_82*C_82)
+anova(h_82)
+
+#design and interaction plots
+par(mfrow=c(2,2))
+plot.design(data_82)
+interaction.plot(A_82,B_82,y_82)
+interaction.plot(A_82,C_82,y_82)
+
+#check assumptions
+par(mfrow=c(1,2))
+# normal plot
+qqnorm(h_82$residuals)
+qqline(h_82$residuals) #ehhhh....
+haov_82<-aov(h_82)
+shapiro.test(h_82$residuals) #NOT normal!!!
+bartlett.test(haov_82$residuals~A_82) #homoscedastic
+bartlett.test(haov_82$residuals~B_82) #homoscedastic
+bartlett.test(haov_82$residuals~C_82) #homoscedastic
+bartlett.test(haov_82$residuals~D_82) #homoscedastic
+
+# residual plot
+plot(h_82$fitted.values,h_82$residuals) #this looks fine
+abline(h=0)
+```
+
+A:D is not significant at alpha = 0.05, but everything else is. In the reduced model, everything is significant. To get the highest mean, we want A, B, and D to be high and C to be low.
