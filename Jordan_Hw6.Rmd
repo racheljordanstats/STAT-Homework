@@ -64,3 +64,59 @@ abline(h=0)
 ```
 
 A:D is not significant at alpha = 0.05, but everything else is. In the reduced model, everything is significant. To get the highest mean, we want A, B, and D to be high and C to be low.
+
+## Question 8.15
+
+```{r}
+#enter data
+A_815 <- rep(c(-1,1), times=16)
+B_815 <- rep(c(-1,1), each = 2, times=8)
+C_815 <- rep(c(-1,1), each = 4, times=4)
+D_815 <- rep(c(-1,1), each = 8, times=2)
+E_815 <- A_815*B_815*C_815*D_815 #fractional factorial, I=ABCDE
+y_815 <- c(7,9,34,55,16,20,40,60,8,10,32,50,18,21,44,61,8,12,35,52,15,22,45,65,6,10,30,53,15,20,41,63)
+
+A_815 <- as.factor(A_815)
+B_815 <- as.factor(B_815)
+C_815 <- as.factor(C_815)
+D_815 <- as.factor(D_815)
+
+data_815 <- data.frame(A_815, B_815, C_815, D_815, E_815, y_815)
+
+#fit the full model
+g_815 <- lm(y_815 ~ (A_815+B_815+C_815+D_815+E_815)^5)
+anova(g_815) #only aliases
+
+#half-normal qq plot
+effects_815 <- abs(g_815$effects[-1])
+qq_815 <- qqnorm(effects_815,type="n")
+text(qq_815$x, qq_815$y, labels=names(effects_815))
+
+#fit reduced model
+h_815 <- lm(y_815 ~ A_815 + B_815 + C_815 + A_815*B_815)
+anova(h_815) 
+
+#design and interaction plots
+par(mfrow=c(2,2))
+plot.design(data_815)
+interaction.plot(A_815,B_815,y_815)
+interaction.plot(B_815,A_815,y_815)
+
+#check assumptions
+par(mfrow=c(1,2))
+# normal plot
+qqnorm(h_815$residuals)
+qqline(h_815$residuals) #this looks pretty normal
+haov_815<-aov(h_815)
+shapiro.test(h_815$residuals) #normal
+bartlett.test(haov_815$residuals~A_815) #homoscedastic
+bartlett.test(haov_815$residuals~B_815) #HETEROSCEDASTIC!!!
+bartlett.test(haov_815$residuals~C_815) #homoscedastic
+bartlett.test(haov_815$residuals~D_815) #homoscedastic
+
+# residual plot
+plot(h_815$fitted.values,h_815$residuals) #this looks fine
+abline(h=0)
+```
+
+In the full model, only A, B, C, and A:B are significant at alpha = 0.05. All were significant in the reduced model. To increase the mean of the response, we want A and B to both be high and C to be low.
