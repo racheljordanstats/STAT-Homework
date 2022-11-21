@@ -120,3 +120,116 @@ abline(h=0)
 ```
 
 In the full model, only A, B, C, and A:B are significant at alpha = 0.05. All were significant in the reduced model. To increase the mean of the response, we want A and B to both be high and C to be low.
+
+## Question 13.1
+
+The model is y ijk = mu + tau i + beta j + (tau beta)ij + epsilon ijk where tau is part, beta is operator, tau beta is interaction between part and operator, and epsilon is random error.
+
+#### (a)
+
+```{r}
+#input data
+part <- rep(c(1,2,3,4,5,6,7,8,9,10),times=6)
+operator <- rep(c(1,2),each=30)
+replicate <- rep(c(1,2,3), each=10,times=2)
+measurement <- c(50,52,53,49,48,52,51,52,50,47,49,52,50,51,49,50,51,50,51,46,50,51,50,50,48,50,51,49,50,49,50,51,54,48,48,52,51,53,51,46,48,51,52,50,49,50,50,48,48,47,51,51,51,51,48,50,50,50,49,48)
+
+data_131 <- data.frame(part,operator,replicate,measurement)
+
+#ANOVA
+g_131 <- lm(measurement ~ as.factor(part) + as.factor(operator) + as.factor(part)*as.factor(operator))
+anova(g_131)
+
+#reduce model
+h_131 <- lm(measurement ~ as.factor(part) + as.factor(operator))
+anova(h_131)
+
+#check assumptions
+par(mfrow=c(1,2))
+# normal plot
+qqnorm(h_131$residuals)
+qqline(h_131$residuals) #this looks pretty normal
+haov_131<-aov(h_131)
+shapiro.test(h_131$residuals) #normal
+bartlett.test(haov_131$residuals~part) #HETEROSCEDASTIC
+bartlett.test(haov_131$residuals~operator) #homoscedastic
+```
+
+There are significant differences in the variation between parts, regardless of which operator is measuring the parts. The interaction between part and operator is not significant so it was dropped to fit a reduced model. It seems that this measuring system is not very good (we are assuming here that the parts are the same size in reality).
+
+#### (b)
+
+```{r}
+#part full model
+(11.0019 - 0.6019)/6
+
+#operator full model
+(0.4167 - 0.6019)/30
+
+#interaction full model
+(0.6019 - 1.5)/3
+
+#part reduced model
+(11.0019 - 1.3350)/6
+
+#operator reduced model
+(0.4167 - 1.3350)/30
+
+#gauge reduced model
+1.3350 + 0
+```
+
+The variance component for the parts in the full model is 1.73. The variance component for the operators in the full model is -0.006 --\> 0. The variance component for the interaction term in the full model is -0.299 --\> 0. The variance component for the parts in the reduced model is 1.61. The variance component for the operators in the reduced model is -0.03 --\> 0. The variability of the gauge is smaller than the variability of the product, but not by that much. I think this is undesirable; we want the variability of the gauge to be small relative to the variability in the product, as this would indicate that the gauge is capable of distinguishing among different grades of product. That doesn't seem to be the case here.
+
+## Question 13.5
+
+The model is y ijk = mu + tau i + beta j + (tau beta) ij + epsilon ijk where tau is position, beta is temperature, tau beta is interaction between position and temperature, and epsilon is random error.
+
+```{r}
+#analyze problem 5.13 as a mixed model experiment
+
+#input data
+y_135 <- c(570,565,583,528,547,521,1063,1080,1043,988,1026,1004,565,510,590,526,538,532)
+position <- rep(1:2,each=3,times=3)
+temp <- rep(1:3, each=6)
+
+data_135 <- data.frame(y_135,position,temp)
+
+g_135 <- lm(y_135~(as.factor(position) + as.factor(temp))^2)
+anova(g_135)
+
+MS_position <- 7160
+MS_temp <- 472671
+MS_pos_temp <- 409
+MSE <- 448
+df_position <- 1
+df_temp <- 2
+df_pos_temp <- 2
+dfE <- 12
+#a <- 3
+#b <- 20
+#n <- 2
+
+#Factor A position fixed effect
+F0.position <- MS_position/MS_pos_temp
+p.position <- 1-pf(F0.position,df_position,df_pos_temp)
+cat("F-value for A is", F0.position,"\n")
+cat("p-value for A is", p.position,"\n","\n")
+
+# Fit the reduced model
+
+h_135 <- lm(y_135 ~ as.factor(position) + as.factor(temp))
+anova(h_135)
+
+#check assumptions
+par(mfrow=c(1,2))
+# normal plot
+qqnorm(h_135$residuals)
+qqline(h_135$residuals) #this looks pretty normal
+haov_135<-aov(h_135)
+shapiro.test(h_135$residuals) #normal but barely!
+bartlett.test(haov_135$residuals~position) #homoscedastic
+bartlett.test(haov_135$residuals~temp) #homoscedastic
+```
+
+Position and temperature are both significant, but the interaction term is not. In the reduced model part and temperature are still significant. The assumptions are met.
