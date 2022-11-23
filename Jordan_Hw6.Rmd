@@ -145,6 +145,9 @@ h_131 <- lm(measurement ~ as.factor(part) + as.factor(operator))
 anova(h_131)
 
 #check assumptions
+
+#check assumptions
+
 par(mfrow=c(1,2))
 # normal plot
 qqnorm(h_131$residuals)
@@ -157,7 +160,10 @@ bartlett.test(haov_131$residuals~operator) #homoscedastic
 
 There are significant differences in the variation between parts, regardless of which operator is measuring the parts. The interaction between part and operator is not significant so it was dropped to fit a reduced model. It seems that this measuring system is not very good (we are assuming here that the parts are the same size in reality).
 
-#### (b)
+
+=======
+#### (b) 
+
 
 ```{r}
 #part full model
@@ -180,6 +186,7 @@ There are significant differences in the variation between parts, regardless of 
 ```
 
 The variance component for the parts in the full model is 1.73. The variance component for the operators in the full model is -0.006 --\> 0. The variance component for the interaction term in the full model is -0.299 --\> 0. The variance component for the parts in the reduced model is 1.61. The variance component for the operators in the reduced model is -0.03 --\> 0. The variability of the gauge is smaller than the variability of the product, but not by that much. I think this is undesirable; we want the variability of the gauge to be small relative to the variability in the product, as this would indicate that the gauge is capable of distinguishing among different grades of product. That doesn't seem to be the case here.
+<<<<<<< HEAD
 
 ## Question 13.5
 
@@ -233,3 +240,4 @@ bartlett.test(haov_135$residuals~temp) #homoscedastic
 ```
 
 Position and temperature are both significant, but the interaction term is not. In the reduced model part and temperature are still significant. The assumptions are met.
+=======
