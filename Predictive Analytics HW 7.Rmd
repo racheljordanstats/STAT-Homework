@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-##  Chapter 9, Exercise 3
+## Chapter 9, Exercise 3
 
 #### (a)
 
@@ -35,11 +35,11 @@ Visually I can tell that this line should be X2 = -0.5 + X1 which is the same as
 ggplot(toy, aes(x=X1, y=X2)) + geom_point(aes(color=Y)) + geom_abline(slope=1,intercept=-0.5)
 ```
 
-#### (c) 
+#### (c)
 
 Classify to red if 0.5 - X1 + X2 \> 0 and classify to blue otherwise. B0 = 0.5, B1 = -1, and B2 = 1.
 
-#### (d) 
+#### (d)
 
 The margins are created by using -1 and 0 as the intercept. The resulting lines will hit the support vectors.
 
@@ -48,15 +48,15 @@ The margins are created by using -1 and 0 as the intercept. The resulting lines 
 ggplot(toy, aes(x=X1, y=X2)) + geom_point(aes(color=Y)) + geom_abline(slope=1,intercept=-0.5) + geom_abline(slope=1, intercept=0, linetype="dotted") + geom_abline(slope=1, intercept=-1,linetype="dotted")
 ```
 
-#### (e) 
+#### (e)
 
 The support vectors are the points (2,2), (2,1), (4,4), and (4,3).
 
-#### (f) 
+#### (f)
 
 The 7th observation, (4,1), is not a support vector and would therefore not affect the maximal marginal hyperplane if moved, UNLESS it was moved to be within the margins or across the hyperplane.
 
-#### (g) 
+#### (g)
 
 ```{r}
 #sketch
@@ -78,3 +78,65 @@ toy_2$Y_2 <- factor(toy_2$Y_2,levels=c("Red","Blue"))
 #sketch
 ggplot(toy_2, aes(x=X1_2, y=X2_2)) + geom_point(aes(color=Y_2))
 ```
+
+## Chapter 9, Exercise 4
+
+```{r}
+#generate data
+set.seed(1354)
+X1_3 <- rnorm(100)
+X2_3 <- runif(100, min = 0, max = 4)
+Y_3 <- ifelse(X1_3**2 + X2_3**2 <= 4, 0, 1)
+df <- as.data.frame(cbind(X1_3, X2_3, Y_3))
+
+#plot data
+ggplot(df, aes(x=X1_3, y=X2_3)) + geom_point(aes(color=Y_3))
+
+#show that in this setting, a support vector machine with polynomial kernal (with degree greater than 1) or a radial kernel will outperform a support vector classifier on the training data
+
+#create train and test
+set.seed(1356)
+train_sample <- sample(1:100,size=80,replace=F)
+train <- df[train_sample,]
+test <- df[-train_sample,]
+
+#support vector classifier
+require(e1071)
+svc <- svm(factor(Y_3) ~ ., data = train, kernel = "linear")
+summary(svc)
+tune.out.svc <- tune(svm, factor(Y_3) ~ .,data=df, kernel = "linear", ranges = list(cost = c(0.001, 0.01, 0.1, 1, 5, 10, 100)))
+summary(tune.out.svc)
+#we want cost to be 1
+best_svc <- svm(factor(Y_3) ~ ., data = train, kernel = "linear", cost=1)
+summary(best_svc)
+#error rate
+table(predict = (predict(best_svc,test)), truth = test$Y_3)
+#error rate is 3/20 = 15%
+plot(best_svc,train) #not too shabby
+
+#support vector machine with polynomial kernel
+tune_out_svm_polynomial <- tune(svm, factor(Y_3) ~ ., data=train, kernel= "polynomial", ranges = list(
+  cost = c(0.1, 1, 10, 100, 1000),
+  gamma = c(0.5, 1, 2, 3, 4)
+))
+summary(tune_out_svm_polynomial)
+#want cost to be 1000 and gamma to be 4
+svm_poly <- svm(factor(Y_3) ~ . , data=train, kernel = "polynomial", gamma = 4, cost = 1000, degree=5)
+plot(svm_poly, train) #fascinating
+table(predict = predict(svm_poly,test), truth = test$Y_3)
+#error rate 3/20 = 15%
+
+#support vector machine with radial kernel
+tune_out_svm_radial <- tune(svm, factor(Y_3) ~ ., data=train, kernel= "radial", ranges = list(
+  cost = c(0.1, 1, 10, 100, 1000),
+  gamma = c(0.5, 1, 2, 3, 4)
+))
+summary(tune_out_svm_radial)
+#want cost to be 10 and gamma to be 1
+svm_radial <- svm(factor(Y_3) ~ . , data=train, kernel = "radial", gamma = 1, cost = 10)
+plot(svm_radial, train) #fascinating
+table(predict = predict(svm_radial,test), truth = test$Y_3)
+#error rate 2/20 = 10% 
+```
+
+The SVM with radial kernel performs best on my data, as backed up by the plots and it having the lowest error rate of 10%.
