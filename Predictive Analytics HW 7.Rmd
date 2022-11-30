@@ -140,3 +140,111 @@ table(predict = predict(svm_radial,test), truth = test$Y_3)
 ```
 
 The SVM with radial kernel performs best on my data, as backed up by the plots and it having the lowest error rate of 10%.
+
+## Chapter 9, Exercise 5
+
+#### (a)
+
+```{r}
+#generate data set
+set.seed(1500)
+x1 <- runif(500) - 0.5
+x2 <- runif(500) - 0.5
+y <- 1*(x1^2 - x2^2 > 0)
+data_95 <- data.frame(x1,x2,factor(y))
+```
+
+#### (b)
+
+```{r}
+#plot data
+ggplot(data_95, aes(x=x1,y=x2)) + geom_point(aes(color=factor(y))) 
+```
+
+#### (c)
+
+```{r}
+#create train and test
+set.seed(8383)
+tr_sample <- sample(1:500,size=500*.8,replace=F)
+train_95 <- data_95[tr_sample,]
+test_95 <- data_95[-tr_sample,]
+
+#binomial family glm
+log_reg <- glm(factor.y. ~ .,data = train_95,family="binomial")
+```
+
+#### (d)
+
+```{r}
+#predict on training data
+preds_95d <- predict(log_reg, data=train_95,type="response")
+preds_95d <- ifelse(preds_95d > 0.5,1,0)
+pred_df <- data.frame(train_95$x1,train_95$x2,preds_95d)
+
+#plot
+ggplot(pred_df, aes(x=`train_95.x1`,y=`train_95.x2`)) + geom_point(aes(color=preds_95d)) 
+```
+
+#### (e)
+
+```{r}
+#fit model
+log_reg_2 <- glm(factor.y. ~ x1**2 + x1*x2 + x1**5 + exp(x1),data = train_95,family="binomial")
+```
+
+#### (f)
+
+```{r}
+#predict on training data
+preds_95e <- predict(log_reg_2, data=train_95,type="response")
+preds_95e <- ifelse(preds_95e > 0.5,1,0)
+pred_df95e <- data.frame(train_95$x1,train_95$x2,preds_95e)
+
+#plot
+ggplot(pred_df95e, aes(x=`train_95.x1`,y=`train_95.x2`)) + geom_point(aes(color=preds_95e)) 
+```
+
+#### (g)
+
+```{r}
+#support vector classifier
+svc_95 <- svm(factor.y. ~ ., data = train_95, kernel = "linear")
+set.seed(19)
+tune.out.svc.95 <- tune(svm, factor.y.~.,data=train_95, kernel = "linear", ranges = list(cost = c(0.001, 0.01, 0.1, 1, 5, 10, 100)))
+summary(tune.out.svc.95)
+#we want cost to be 5
+best_svc_95 <- svm(factor.y. ~ ., data = train_95, kernel = "linear", cost=5)
+summary(best_svc_95)
+#predict
+preds_95g <- predict(best_svc_95,train_95)
+#preds data frame
+preds_df95g <- data.frame(train_95$x1,train_95$x2,preds_95g)
+ggplot(preds_df95g, aes(x=`train_95.x1`,y=`train_95.x2`)) + geom_point(aes(color=preds_95g))  
+```
+
+#### (h)
+
+```{r}
+#support vector machine with polynomial kernel
+set.seed(9934)
+tune_out_svm_polynomial_95 <- tune(svm, factor.y. ~ ., data=train_95, kernel= "polynomial", ranges = list(
+  cost = c(0.1, 1, 10),
+  gamma = c(0.5, 1, 2, 3)
+))
+summary(tune_out_svm_polynomial_95)
+#want cost to be 1 and gamma to be 1
+svm_poly_95 <- svm(factor.y. ~ . , data=train_95, kernel = "polynomial", gamma = 1, cost = 1, degree=4)
+poly_95_preds <- predict(svm_poly_95,train_95)
+
+#preds data frame
+preds_df95h <- data.frame(train_95$x1,train_95$x2,poly_95_preds)
+ggplot(preds_df95g, aes(x=`train_95.x1`,y=`train_95.x2`)) + geom_point(aes(color=poly_95_preds))  
+
+table(poly_95_preds,train_95$factor.y.)
+#error rate 15/400 = 3.75%
+```
+
+#### (i)
+
+Regular logistic regression without using non-linear predictors gives relatively similar predictions to a support vector classifier, but a SVM gives different predictions than a logistic regression when non-linear predictors are introduced. The SVM predictions, when choosing the correct degree, are much closer to the true values (just based on the plots) than the predictions from the other methods are.
