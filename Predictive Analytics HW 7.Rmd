@@ -248,3 +248,163 @@ table(poly_95_preds,train_95$factor.y.)
 #### (i)
 
 Regular logistic regression without using non-linear predictors gives relatively similar predictions to a support vector classifier, but a SVM gives different predictions than a logistic regression when non-linear predictors are introduced. The SVM predictions, when choosing the correct degree, are much closer to the true values (just based on the plots) than the predictions from the other methods are.
+
+## Chapter 9, Exercise 8
+
+```{r}
+#load data
+require(ISLR2)
+OJ <- OJ
+```
+
+#### (a)
+
+```{r}
+#create train and test sets
+set.seed(0705)
+train_sample_98 <- sample(1:1070, size = 800, replace = F)
+train_98 <- OJ[train_sample_98,]
+test_98 <- OJ[-train_sample_98,]
+```
+
+#### (b)
+
+```{r}
+set.seed(2000)
+svc_98 <- svm(Purchase ~ ., data = train_98, kernel = "linear", cost= 0.01)
+summary(svc_98)
+```
+
+A linear kernel was used with cost = 0.01 and there were 437 support vectors, 218 in one class and 219 in the other. There were two classes, with levels CH and MM.
+
+#### (c) 
+
+```{r}
+#training error rate
+train_preds_98 <- predict(svc_98,train_98)
+table(train_preds_98, train_98$Purchase)
+(55+80)/800 #16.9% error rate
+
+#test error rate
+test_preds_98 <- predict(svc_98,test_98)
+table(test_preds_98, test_98$Purchase)
+(25+23)/270 #17.8% error rate
+```
+
+The training error rate is 16.9% and the testing error rate is 17.8%.
+
+#### (d)
+
+```{r}
+#tune for cost
+set.seed(19876)
+tune.out.svc.98 <- tune(svm, Purchase~.,data=train_98, kernel = "linear", ranges = list(cost = c(0.01,0.1,1:10)))
+summary(tune.out.svc.98) #optimal cost is 7
+```
+
+#### (e)
+
+```{r}
+#create new support vector classifier
+set.seed(2001)
+svc_98e <- svm(Purchase ~ ., data = train_98, kernel = "linear", cost= 7)
+summary(svc_98e)
+
+#training error rate
+train_preds_98e <- predict(svc_98e,train_98)
+table(train_preds_98e, train_98$Purchase)
+(56+71)/800 #15.9% error rate
+
+#test error rate
+test_preds_98e <- predict(svc_98e,test_98)
+table(test_preds_98e, test_98$Purchase)
+(30+24)/270 #20% error rate
+```
+
+The training error rate is 15.9% and the testing error rate is 20%.
+
+#### (f)
+
+```{r}
+#repeat part b
+set.seed(838)
+svm_radial_98 <- svm(Purchase ~ . , data=train_98, kernel = "radial", cost = 0.01)
+summary(svm_radial_98)
+#A radial kernel was used with cost = 0.01  and there were 630 support vectors, 314 in one class and 316 in the other. There were two classes, with levels CH and MM.
+
+#repeat part c
+#training error rate
+train_preds_98fc <- predict(svm_radial_98,train_98)
+table(train_preds_98fc, train_98$Purchase)
+(314)/800 #39.2% error rate
+#test error rate
+test_preds_98fc <- predict(svm_radial_98,test_98)
+table(test_preds_98fc, test_98$Purchase)
+(103)/270 #38.1% error rate
+
+#repeat part d
+set.seed(8643)
+tune_out_svm_radial_98fd <- tune(svm, Purchase ~ ., data=train_98, kernel= "radial", ranges = list(
+  cost = c(0.01,0.1,1:10)
+))
+summary(tune_out_svm_radial_98fd)
+#want cost to be 1
+
+#repeat part e
+set.seed(8384)
+svm_radial_98fe <- svm(Purchase ~ . , data=train_98, kernel = "radial", cost = 1)
+summary(svm_radial_98fe)
+#training error rate
+train_preds_98fe <- predict(svm_radial_98fe,train_98)
+table(train_preds_98fe, train_98$Purchase)
+(43+77)/800 #15% error rate
+#test error rate
+test_preds_98fe <- predict(svm_radial_98fe,test_98)
+table(test_preds_98fe, test_98$Purchase)
+(20+22)/270 #15.6% error rate
+```
+
+#### (g)
+
+```{r}
+#repeat part b
+set.seed(55667)
+svm_poly_98gb <- svm(Purchase ~ . , data=train_98, kernel = "polynomial", cost = 0.01, degree=2)
+summary(svm_poly_98gb)
+#A polynomial kernel was used with cost = 0.01 and degree = 2 and there were 633 support vectors, 314 in one class and 319 in the other. There were two classes, with levels CH and MM.
+
+#repeat part c
+#training error rate
+train_preds_98gc <- predict(svm_poly_98gb,train_98)
+table(train_preds_98gc, train_98$Purchase)
+(314)/800 #39.2% error rate
+#test error rate
+test_preds_98gc <- predict(svm_poly_98gb,test_98)
+table(test_preds_98gc, test_98$Purchase)
+(103)/270 #38.1% error rate
+
+#repeat part d
+set.seed(86438)
+tune_out_svm_poly_98gd <- tune(svm, Purchase ~ ., data=train_98, kernel= "polynomial",degree=2, ranges = list(
+  cost = c(0.01,0.1,1:10)
+))
+summary(tune_out_svm_poly_98gd)
+#want cost to be 5
+
+#repeat part e
+set.seed(838437)
+svm_poly_98ge <- svm(Purchase ~ . , data=train_98, kernel = "polynomial", cost = 5, degree=2)
+summary(svm_poly_98ge)
+#training error rate
+train_preds_98ge <- predict(svm_poly_98ge,train_98)
+table(train_preds_98ge, train_98$Purchase)
+(35+80)/800 #14.4% error rate
+#test error rate
+test_preds_98ge <- predict(svm_poly_98ge,test_98)
+table(test_preds_98ge, test_98$Purchase)
+(15+28)/270 #15.9% error rate
+```
+
+#### (h)
+
+The support vector machine with radial kernel and cost = 1 performed the best on the test data with an error rate of 15.6%.
