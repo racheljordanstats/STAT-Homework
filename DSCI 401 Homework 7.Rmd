@@ -1,0 +1,82 @@
+---
+title: "DSCI 401 Homework 7"
+author: "Rachel Jordan"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+[Link to Python Questions](https://colab.research.google.com/drive/1TKwX9ZGsH5wEC4j_O8m73wwwBQ79PuyM?usp=sharing)
+
+## Question 1
+
+#### Write a SQL query to create a list of all movies that Kevin Bacon has ever been in and convert this to a data frame object.
+
+```{r}
+#load tidyverse
+require(tidyverse)
+
+#connect to database
+require(RMySQL)
+db <- dbConnect(
+  MySQL(),
+  host = "scidb.smith.edu",
+  user = "sds192",
+  password = "DSismfc@S",
+  dbname = "imdb"
+)
+knitr::opts_chunk$set(connection = db, max.print = 20)
+
+#list tables
+dbListTables(db) #cool
+
+#grab Kevin Bacon's unique identifier
+q1 <- "SELECT * FROM name WHERE name LIKE '%Bacon, Kevin%';"
+result <- dbSendQuery(db, q1)
+kevinbacons <- fetch(result)
+kevins_unique_ids <- kevinbacons[,1]
+
+#i looked on the real imdb and we want kevin bacon (I)
+
+q2 <- "SELECT * FROM movie_info LIMIT 5;"
+result2 <- dbSendQuery(db,q2)
+fetch(result2) #this is not the table i need
+
+q3 <- "SELECT * FROM kind_type LIMIT 5;"
+result3 <- dbSendQuery(db,q3)
+fetch(result3) #i need kind_id = 1 in title table
+
+q4 <- "SELECT * FROM title LIMIT 5;"
+result4 <- dbSendQuery(db,q4)
+fetch(result4) #i need this table, id = movie id, can filter by kind id = 1
+
+q5 <- "SELECT * FROM cast_info LIMIT 5;"
+result5 <- dbSendQuery(db,q5)
+fetch(result5) #person_id, movie_id
+
+#do some magic
+q6 <- "SELECT t.id, t.title FROM title t JOIN cast_info ci ON ci.movie_id = t.id WHERE kind_id = '1'AND person_id = 122408;"
+result6 <- dbSendQuery(db,q6)
+kevinbaconsmovies <- fetch(result6)
+head(kevinbaconsmovies)
+```
+
+## Question 2
+
+#### Find a list of every actor/actress who has appeared in a movie with Kevin Bacon.
+
+```{r}
+dbListTables(db)
+
+q7 <- "SELECT * FROM complete_cast LIMIT 5;"
+result7 <- dbSendQuery(db,q7)
+fetch(result7) #do not need this
+
+q8 <- "SELECT ci.person_id, n.name FROM cast_info ci JOIN name n ON n.id = ci.person_id JOIN title t ON ci.movie_id = t.id WHERE t.kind_id = '1' AND ci.movie_id IN (SELECT ci.movie_id FROM title t JOIN cast_info ci ON ci.movie_id = t.id WHERE kind_id = '1'AND person_id = 122408) LIMIT 1000000;"
+result8<- dbSendQuery(db,q8)
+kevinbaconsfriends <- fetch(result8, n = -1)
+head(kevinbaconsfriends)
+```
