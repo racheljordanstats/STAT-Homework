@@ -1,0 +1,135 @@
+---
+title: "Jordan_Hw7"
+author: "Rachel Jordan"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 10.6
+
+#### (a)
+
+```{r}
+#input data
+y_106 <- c(193,230,172,91,113,125)
+x1_106 <- c(1.6,15.5,22.0,43.0,33.0,40.0)
+x2_106 <- c(851,815,1058,1201,1357,1115)
+data_106 <- data.frame(y_106,x1_106,x2_106)
+
+#fit model
+model_106 <- lm(y_106 ~., data = data_106)
+summary(model_106)
+```
+
+#### (b)
+
+We are testing H0 = all betas are 0 and H1 = at least one beta is not 0.
+
+```{r}
+#calculate sse, ssr, sst
+sse_106 <- sum((fitted(model_106) - data_106$y_106)**2)
+ssr_106 <- sum((fitted(model_106) - mean(data_106$y_106))**2)
+sst_106 <- ssr_106 + sse_106
+
+#calculate F value and p-value
+F_106 <- (ssr_106/2)/(sse_106/(6-2-1))
+pf(F_106, 2, (6-2-1),lower.tail=F) #not significant at alpha = 0.05
+```
+
+We cannot reject the null. At least one of the betas might be 0. I could have gotten this from the summary output as well.
+
+#### (c)
+
+```{r}
+summary(model_106)
+```
+
+We are testing H0: beta j is 0, H1: beta j is not 0. The t statistic for x1 is -1.089 and the t statistic for x2 is -1.726. The p-values for these are substantially above alpha = 0.05, so we can draw the conclusion that the betas could be zero and do not improve the model.
+
+## Question 10.12
+
+```{r}
+#input data
+y_1012 <- c(26,24,175,160,163,55,62,100,26,30,70,71)
+x1_1012 <- c(1,1,1.5,1.5,1.5,0.5,1.5,0.5,1,0.5,1,0.5)
+x2_1012 <- c(1,1,4,4,4,2,2,3,1.5,1.5,2.5,2.5)
+data_1012 <- data.frame(y_1012,x1_1012,x2_1012)
+
+#fit model
+model_1012 <- lm(y_1012 ~ x1_1012 + x2_1012 + x1_1012**2 + x2_1012**2 + x1_1012*x2_1012, data = data_1012)
+
+#model summary
+summary(model_1012)
+```
+
+According to the F-statistic and its p-value from the model summary, we can reject the null and say that there is evidence to suggest that at least one of the betas is not equal to 0.
+
+## Question 15.15
+
+```{r}
+#input data
+y_1515 <- c(46.5,45.9,49.8,46.1,44.3,48.7,49,50.1,48.5,45.2,46.3,47.1,48.9,48.2,50.3,44.7,43,51,48.1,48.6)
+x_1515 <- c(13,14,12,12,14,12,10,11,12,14,15,14,11,11,10,16,15,10,12,11)
+X_1515 <- x_1515 - mean(x_1515) #center x
+formulations <- as.factor(rep(1:4, each=5))
+
+data_1515 <- data.frame(y_1515, x_1515, formulations, X_1515)
+
+g_1515 <- lm(y_1515 ~ X_1515 + formulations);anova(g_1515)  # To get the p-value and adjusted SS for formulations. The p-value is not significant. 
+
+
+g0_1515 <- lm(y_1515 ~ formulations + X_1515);anova(g0_1515)  # To get the p-value and adjusted SS for thickness. The p-value is not significant. 
+
+# Compute the adjusted treatments means and their standard errors:
+#ybar.adj <- se.of.adjusted.mean <- vector(length=3)
+
+ybar.adj_1515 <- vector(length=4)
+
+se.of.adjusted.mean_1515 <- vector(length=4)
+
+for(i in 1:4) {
+prediction_1515 <- predict(g_1515, new=data.frame(formulations=as.factor(i), X_1515=0), se.fit=T)
+ybar.adj_1515[i] <- prediction_1515$fit
+se.of.adjusted.mean_1515[i] <- prediction_1515$se.fit
+}
+
+tau.hat_1515 <- ybar.adj_1515 - mean(y_1515)
+cat("Adjusted formulation means and their standard errors are", "\n"); prmatrix(cbind(tau.hat_1515, ybar.adj_1515, se.of.adjusted.mean_1515))
+```
+
+## Question 15.17
+
+```{r}
+#input data
+y_1517 <- c(68,90,98,77,88,112,94,65,74,85,118,82,73,92,80)
+x_1517 <- c(120,140,150,125,136,165,140,120,125,133,175,132,124,141,130)
+X_1517 <- x_1517 - mean(x_1517) #center x
+speed <- as.factor(rep(1:3, each=5))
+
+data_1517 <- data.frame(y_1517, x_1517, speed, X_1517)
+
+g_1517 <- lm(y_1517 ~ X_1517 + speed);anova(g_1517)  # To get the p-value and adjusted SS for speed. The p-value is not significant. 
+
+
+g0_1517 <- lm(y_1517 ~ speed + X_1517);anova(g0_1517)  # To get the p-value and adjusted SS for thickness. The p-value is very significant.
+
+# Compute the adjusted treatments means and their standard errors:
+#ybar.adj <- se.of.adjusted.mean <- vector(length=3)
+
+ybar.adj_1517 <- vector(length=3)
+
+se.of.adjusted.mean_1517 <- vector(length=3)
+
+for(i in 1:3) {
+prediction_1517 <- predict(g_1517, new=data.frame(speed=as.factor(i), X_1517=0), se.fit=T)
+ybar.adj_1517[i] <- prediction_1517$fit
+se.of.adjusted.mean_1517[i] <- prediction_1517$se.fit
+}
+
+tau.hat_1517 <- ybar.adj_1517 - mean(y_1517)
+cat("Adjusted speed means and their standard errors are", "\n"); prmatrix(cbind(tau.hat_1517, ybar.adj_1517, se.of.adjusted.mean_1517))
+```
