@@ -21,8 +21,12 @@ x2_106 <- c(851,815,1058,1201,1357,1115)
 data_106 <- data.frame(y_106,x1_106,x2_106)
 
 #fit model
-model_106 <- lm(y_106 ~., data = data_106)
+model_106 <- lm(y_106 ~ ., data = data_106)
 summary(model_106)
+
+#assumptions
+require(stats)
+shapiro.test(model_106$residuals) #normal!
 ```
 
 #### (b)
@@ -64,6 +68,9 @@ model_1012 <- lm(y_1012 ~ x1_1012 + x2_1012 + x1_1012**2 + x2_1012**2 + x1_1012*
 
 #model summary
 summary(model_1012)
+
+#assumptions
+shapiro.test(model_1012$residuals) #normal
 ```
 
 According to the F-statistic and its p-value from the model summary, we can reject the null and say that there is evidence to suggest that at least one of the betas is not equal to 0.
@@ -79,10 +86,10 @@ formulations <- as.factor(rep(1:4, each=5))
 
 data_1515 <- data.frame(y_1515, x_1515, formulations, X_1515)
 
-g_1515 <- lm(y_1515 ~ X_1515 + formulations);anova(g_1515)  # To get the p-value and adjusted SS for formulations. The p-value is not significant. 
+g_1515 <- lm(y_1515 ~ X_1515 + formulations);anova(g_1515)  # To get the p-value and adjusted SS for formulations. The p-value is not significant -- formulations is not significant.
 
 
-g0_1515 <- lm(y_1515 ~ formulations + X_1515);anova(g0_1515)  # To get the p-value and adjusted SS for thickness. The p-value is not significant. 
+g0_1515 <- lm(y_1515 ~ formulations + X_1515);anova(g0_1515)  # To get the p-value and adjusted SS for thickness. The p-value is not significant - thickness not significant
 
 # Compute the adjusted treatments means and their standard errors:
 #ybar.adj <- se.of.adjusted.mean <- vector(length=3)
@@ -99,7 +106,14 @@ se.of.adjusted.mean_1515[i] <- prediction_1515$se.fit
 
 tau.hat_1515 <- ybar.adj_1515 - mean(y_1515)
 cat("Adjusted formulation means and their standard errors are", "\n"); prmatrix(cbind(tau.hat_1515, ybar.adj_1515, se.of.adjusted.mean_1515))
+
+#assumptions
+shapiro.test(g_1515$residuals) #normal
+bartlett.test(g_1515$residuals~formulations) #homoscedastic
+#the assumptions are met
 ```
+
+Formulation 3 maximizes the strength of the glue, so we would say formulation 3 is best if that's what we want.
 
 ## Question 15.17
 
@@ -112,10 +126,10 @@ speed <- as.factor(rep(1:3, each=5))
 
 data_1517 <- data.frame(y_1517, x_1517, speed, X_1517)
 
-g_1517 <- lm(y_1517 ~ X_1517 + speed);anova(g_1517)  # To get the p-value and adjusted SS for speed. The p-value is not significant. 
+g_1517 <- lm(y_1517 ~ X_1517 + speed);anova(g_1517)  # To get the p-value and adjusted SS for speed. The p-value is not significant. speed is not significant
 
 
-g0_1517 <- lm(y_1517 ~ speed + X_1517);anova(g0_1517)  # To get the p-value and adjusted SS for thickness. The p-value is very significant.
+g0_1517 <- lm(y_1517 ~ speed + X_1517);anova(g0_1517)  # To get the p-value and adjusted SS for thickness. The p-value is very significant. hardness is significant.
 
 # Compute the adjusted treatments means and their standard errors:
 #ybar.adj <- se.of.adjusted.mean <- vector(length=3)
@@ -132,4 +146,11 @@ se.of.adjusted.mean_1517[i] <- prediction_1517$se.fit
 
 tau.hat_1517 <- ybar.adj_1517 - mean(y_1517)
 cat("Adjusted speed means and their standard errors are", "\n"); prmatrix(cbind(tau.hat_1517, ybar.adj_1517, se.of.adjusted.mean_1517))
+
+#assumptions
+shapiro.test(g_1517$residuals) #normal
+bartlett.test(g_1517$residuals~speed) #homoscedastic
+#the assumptions are met
 ```
+
+The first speed gives the highest values of the response, so we want to use speed 1 if we want to maximize y.
